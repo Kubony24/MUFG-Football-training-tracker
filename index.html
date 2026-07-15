@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自主トレ記録 | サッカー部</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    :root {
+      --color-bg: #f5f5f5;
+      --color-bg2: #ebebeb;
+      --color-card: #ffffff;
+      --color-border: #e0e0e0;
+      --color-border2: #d0d0d0;
+      --color-text: #1a1a1a;
+      --color-text2: #666666;
+      --radius-lg: 14px;
+      --radius-md: 9px;
+      --font: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--color-bg); font-family: var(--font); min-height: 100vh; }
+    .app { max-width: 430px; margin: 0 auto; padding: 16px 12px 80px; }
+
+    /* ヘッダー */
+    .header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 0 2px; }
+    .header-title { font-size: 17px; font-weight: 600; color: var(--color-text); }
+    .header-sub { font-size: 12px; color: var(--color-text2); }
+    .btn-refresh { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--color-text2); font-size: 20px; padding: 4px; }
+
+    /* タブ */
+    .tab-bar { display: flex; gap: 4px; background: var(--color-bg2); border-radius: var(--radius-lg); padding: 4px; margin-bottom: 16px; }
+    .tab { flex: 1; padding: 8px 2px; border: none; background: transparent; border-radius: var(--radius-md); font-size: 12px; color: var(--color-text2); cursor: pointer; font-family: var(--font); transition: all 0.15s; }
+    .tab.active { background: var(--color-card); color: var(--color-text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* セクション */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* カード */
+    .card { background: var(--color-card); border: 0.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 12px; }
+    .label { font-size: 12px; color: var(--color-text2); margin-bottom: 6px; }
+
+    /* フォーム */
+    select, input[type=text], input[type=number], input[type=date] {
+      width: 100%; padding: 10px 12px; font-size: 15px;
+      border: 1px solid var(--color-border2); border-radius: var(--radius-md);
+      background: var(--color-bg); color: var(--color-text); font-family: var(--font);
+      margin-bottom: 10px; appearance: none; -webkit-appearance: none;
+    }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23666' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .two-col > div > select, .two-col > div > input { margin-bottom: 0; }
+
+    /* ボタン */
+    .btn { padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border2); background: transparent; color: var(--color-text); font-size: 14px; cursor: pointer; font-family: var(--font); font-weight: 500; transition: background 0.12s; }
+    .btn-primary { background: #185FA5; color: #ffffff; border-color: #185FA5; }
+    .btn-primary:active { background: #0C447C; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn-danger { border-color: var(--color-border); color: var(--color-text2); font-size: 12px; padding: 5px 10px; }
+
+    /* トグル */
+    .toggle-bar { display: flex; background: var(--color-bg2); border-radius: var(--radius-md); padding: 3px; margin-bottom: 14px; }
+    .toggle-btn { flex: 1; padding: 7px 8px; border: none; background: transparent; border-radius: 7px; font-size: 13px; color: var(--color-text2); cursor: pointer; font-family: var(--font); transition: all 0.15s; }
+    .toggle-btn.active { background: var(--color-card); color: var(--color-text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* ランキング */
+    .week-label { font-size: 12px; color: var(--color-text2); text-align: center; margin-bottom: 10px; }
+    .rank-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--color-card); border: 0.5px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 8px; }
+    .rank-num { font-size: 20px; min-width: 30px; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+    .team-avatar { width: 38px; height: 38px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name { font-size: 15px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-meta { font-size: 12px; color: var(--color-text2); margin-top: 2px; }
+    .rank-stat { text-align: right; flex-shrink: 0; }
+    .rank-km { font-size: 17px; font-weight: 600; color: var(--color-text); }
+    .rank-km-label { font-size: 11px; color: var(--color-text2); }
+    .bar-wrap { height: 4px; background: var(--color-bg2); border-radius: 2px; margin-top: 5px; }
+    .bar { height: 4px; border-radius: 2px; transition: width 0.4s; }
+    .chip { display: inline-flex; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+
+    /* 履歴 */
+    .log-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--color-border); }
+    .log-item:last-child { border-bottom: none; }
+    .log-date { font-size: 11px; color: var(--color-text2); min-width: 52px; padding-top: 2px; }
+    .log-body { flex: 1; }
+    .log-menu { font-size: 14px; font-weight: 600; color: var(--color-text); }
+    .log-detail { font-size: 12px; color: var(--color-text2); margin-top: 2px; }
+    .log-del { background: none; border: none; color: var(--color-text2); cursor: pointer; padding: 0 4px; font-size: 16px; }
+
+    /* メンバー行 */
+    .member-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--color-border); flex-wrap: wrap; }
+    .member-row:last-child { border-bottom: none; }
+    .member-name { flex: 1; font-size: 14px; color: var(--color-text); }
+    .member-team-sel { width: auto !important; font-size: 12px !important; padding: 5px 28px 5px 8px !important; margin-bottom: 0 !important; }
+
+    /* セクションタイトル */
+    .section-title { font-size: 13px; font-weight: 600; color: var(--color-text2); margin-bottom: 8px; margin-top: 4px; }
+
+    /* 空状態 */
+    .empty { text-align: center; padding: 2rem; color: var(--color-text2); font-size: 14px; }
+
+    /* ローディング */
+    .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .loading-box { background: var(--color-card); border-radius: var(--radius-lg); padding: 20px 28px; font-size: 14px; color: var(--color-text); display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+    /* トースト */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #185FA5; color: #fff; padding: 10px 22px; border-radius: var(--radius-md); font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 1000; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .toast.show { opacity: 1; }
+
+    /* 行グリッド */
+    .row { display: flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <i class="ti ti-ball-football" style="font-size:24px;color:#185FA5;"></i>
+    <div>
+      <div class="header-title">自主トレ記録</div>
+      <div class="header-sub">サッカー部トレーニングトラッカー</div>
+    </div>
+    <button class="btn-refresh" onclick="loadAll()" title="最新データに更新">
+      <i class="ti ti-refresh"></i>
+    </button>
+  </div>
+
+  <!-- タブバー -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('ranking')"><i class="ti ti-trophy"></i> ランキング</button>
+    <button class="tab" onclick="switchTab('log')"><i class="ti ti-plus"></i> 記録</button>
+    <button class="tab" onclick="switchTab('history')"><i class="ti ti-list"></i> 履歴</button>
+    <button class="tab" onclick="switchTab('settings')"><i class="ti ti-settings"></i> 設定</button>
+  </div>
+
+  <!-- ランキング -->
+  <div id="sec-ranking" class="section active">
+    <div class="week-label" id="week-label"></div>
+    <div class="toggle-bar">
+      <button class="toggle-btn active" id="tog-member" onclick="setRankMode('member')">
+        <i class="ti ti-user"></i> 個人
+      </button>
+      <button class="toggle-btn" id="tog-team" onclick="setRankMode('team')">
+        <i class="ti ti-users-group"></i> チーム
+      </button>
+    </div>
+    <div id="ranking-list"></div>
+  </div>
+
+  <!-- 記録 -->
+  <div id="sec-log" class="section">
+    <div class="card">
+      <div class="label">メンバーを選択</div>
+      <select id="log-member"></select>
+
+      <div class="label">トレーニングメニュー</div>
+      <input type="text" id="log-menu" placeholder="例: ランニング、筋トレ、フットサル等" />
+
+      <div class="two-col" style="margin-bottom:10px;">
+        <div>
+          <div class="label">走行距離 (km)</div>
+          <input type="number" id="log-km" min="0" step="0.1" placeholder="0.0" />
+        </div>
+        <div>
+          <div class="label">時間（分）</div>
+          <input type="number" id="log-min" min="0" step="1" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="label">日付</div>
+      <input type="date" id="log-date" />
+
+      <div style="margin-top:14px;text-align:right;">
+        <button class="btn btn-primary" onclick="addLog()">
+          <i class="ti ti-check"></i> 記録する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 履歴 -->
+  <div id="sec-history" class="section">
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div class="label">チーム</div>
+          <select id="hist-team" onchange="onHistTeamChange()"><option value="">全チーム</option></select>
+        </div>
+        <div>
+          <div class="label">メンバー</div>
+          <select id="hist-member" onchange="renderHistory()"><option value="">全員</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <!-- 設定 -->
+  <div id="sec-settings" class="section">
+    <div class="section-title">チーム管理</div>
+    <div class="card">
+      <div class="label">新しいチームを追加</div>
+      <div class="row" style="margin-bottom:0;">
+        <input type="text" id="new-team" placeholder="チーム名を入力" style="flex:1;margin-bottom:0;" />
+        <button class="btn btn-primary btn-sm" onclick="addTeam()">追加</button>
+      </div>
+      <div id="team-list"></div>
+    </div>
+
+    <div class="section-title">メンバー管理</div>
+    <div class="card">
+      <div class="label">新しいメンバーを追加</div>
+      <input type="text" id="new-member" placeholder="名前を入力" />
+      <div class="label">チームに割り当て（任意）</div>
+      <select id="new-member-team" style="margin-bottom:10px;"><option value="">未所属</option></select>
+      <div style="text-align:right;">
+        <button class="btn btn-primary btn-sm" onclick="addMember()">追加</button>
+      </div>
+    </div>
+    <div class="card">
+      <div id="member-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ★ Google Apps Script の URL
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycby-ubWVxdAYIDO_TG_0xJi__YpRweOiLQBjrij2b3l67sg1XgEIwxRwvajjVK3wBRU2/exec';
+
+  const COLORS = ['#185FA5','#0F6E56','#993C1D','#993556','#533AB7','#3B6D11','#BA7517','#A32D2D'];
+  const BG     = ['#E6F1FB','#E1F5EE','#FAECE7','#FBEAF0','#EEEDFE','#EAF3DE','#FAEEDA','#FCEBEB'];
+
+  let state = { members: [], teams: [], logs: [] };
+  let rankMode = 'member';
+
+  // ---- API ----
+  async function api(method, body) {
+    if (method === 'GET') {
+      const res = await fetch(GAS_URL + '?action=getAll');
+      return res.json();
+    }
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(body) });
+    return res.json();
+  }
+
+  // ---- ローディング ----
+  function showLoading(msg = '通信中...') {
+    let el = document.getElementById('loading-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'loading-overlay';
+      el.className = 'loading-overlay';
+      el.innerHTML = `<div class="loading-box"><i class="ti ti-loader-2 spin"></i>${msg}</div>`;
+      document.body.appendChild(el);
+    }
+  }
+  function hideLoading() {
+    const el = document.getElementById('loading-overlay');
+    if (el) el.remove();
+  }
+
+  // ---- データ読み込み ----
+  async function loadAll() {
+    showLoading('データを読み込み中...');
+    try {
+      const data = await api('GET');
+      state.teams   = data.teams   || [];
+      state.members = data.members || [];
+      state.logs    = data.logs    || [];
+      renderAll();
+    } catch (e) {
+      showToast('通信エラーが発生しました');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // ---- タブ切り替え ----
+  function switchTab(t) {
+    document.querySelectorAll('.tab').forEach((b, i) => {
+      b.classList.toggle('active', ['ranking','log','history','settings'][i] === t);
+    });
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + t).classList.add('active');
+    if (t === 'history') renderHistory();
+    if (t === 'settings') renderSettings();
+  }
+
+  // ---- ランキングモード ----
+  function setRankMode(mode) {
+    rankMode = mode;
+    document.getElementById('tog-member').classList.toggle('active', mode === 'member');
+    document.getElementById('tog-team').classList.toggle('active', mode === 'team');
+    renderRanking();
+  }
+
+  // ---- 今週の範囲 ----
+  function getWeekRange() {
+    const now = new Date();
+    const day = now.getDay();
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const fmt = d => `${d.getMonth() + 1}/${d.getDate()}`;
+    return { start: mon, end: sun, label: `今週 (${fmt(mon)} – ${fmt(sun)})` };
+  }
+
+  // ---- カラー ----
+  function colorFor(id, list) {
+    const idx = Math.max(list.findIndex(x => x.id === id), 0);
+    return { bg: BG[idx % BG.length], fg: COLORS[idx % COLORS.length] };
+  }
+
+  // ---- ランキング記号 ----
+  function rankSymbol(i) { return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`; }
+
+  // ---- 時間フォーマット ----
+  function fmtMin(m) {
+    m = parseInt(m);
+    if (!m || m <= 0) return '';
+    return m < 60 ? `${m}分` : `${Math.floor(m / 60)}時間${m % 60 ? (m % 60) + '分' : ''}`;
+  }
+
+  // ---- ランキング描画 ----
+  function renderRanking() {
+    const { start, end, label } = getWeekRange();
+    document.getElementById('week-label').textContent = label;
+    const s = start.toISOString().slice(0, 10);
+    const e = end.toISOString().slice(0, 10);
+    const el = document.getElementById('ranking-list');
+
+    if (rankMode === 'member') {
+      const totals = {};
+      state.members.forEach(m => totals[m.id] = { km: 0, minutes: 0, sessions: 0 });
+      state.logs.forEach(l => {
+        if (l.date >= s && l.date <= e && totals[l.memberId] !== undefined) {
+          totals[l.memberId].km      += parseFloat(l.km)      || 0;
+          totals[l.memberId].minutes += parseInt(l.minutes)   || 0;
+          totals[l.memberId].sessions++;
+        }
+      });
+      const sorted = state.members
+        .map(m => ({ ...m, ...totals[m.id] }))
+        .sort((a, b) => b.km - a.km || b.minutes - a.minutes || b.sessions - a.sessions);
+
+      if (!sorted.length) { el.innerHTML = '<div class="empty">まずメンバーを追加してください</div>'; return; }
+      const maxKm = Math.max(...sorted.map(m => m.km), 0.1);
+
+      el.innerHTML = sorted.map((m, i) => {
+        const { bg, fg } = colorFor(m.id, state.members);
+        const team = state.teams.find(t => t.id === m.teamId);
+        const pct  = Math.round((m.km / maxKm) * 100);
+        const tc   = team ? colorFor(team.id, state.teams) : null;
+        const timePart = fmtMin(m.minutes) ? ` · ${fmtMin(m.minutes)}` : '';
+        return `<div class="rank-card">
+          <div class="rank-num">${rankSymbol(i)}</div>
+          <div class="avatar" style="background:${bg};color:${fg};">${m.name.slice(0,2)}</div>
+          <div class="rank-info">
+            <div class="rank-name">${m.name}</div>
+            <div class="rank-meta">
+              ${team ? `<span class="chip" style="background:${tc.bg};color:${tc.fg};">${team.name}</span> · ` : ''}
+              ${m.sessions}回${timePart}
+            </div>
+            <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${fg};"></div></div>
+          </div>
+          <div class="rank-stat">
+            <div class="rank-km">${m.km.toFixed(1)}</div>
+            <div class="rank-km-label">km</div>
+          </div>
+        </div>`;
+      }).join('');
+
+    } else {
+      if (!state.teams.length) { el.innerHTML = '<div class="empty">まずチームを追加してください</div>'; return; }
+      const totals = {};
+      state.teams.forEach(t => totals[t.id] = { km: 0, minutes: 0, sessions: 0, memberCount: 0 });
+      const memberTeam = {};
+      state.members.forEach(m => { if (m.teamId) memberTeam[m.id] = m.teamId; });
+      state.logs.forEach(l => {
+        if (l.date >= s && l.date <= e) {
+          const tid = memberTeam[l.memberId];
+          if (tid && totals[tid]) {
+            totals[tid].km      += parseFloat(l.km)    || 0;
+            totals[tid].minutes += parseInt(l.minutes) || 0;
+            totals[tid].sessions++;
+          }
+        }
+      });
+      state.teams.forEach(t => { totals[t.id].memberCount = state.members.filter(m => m.teamId === t.id).length; });
+      const sorted = state.teams
+        .map(t => ({ ...t, ...totals[t.id] }))
+        .sort((a, b) => b.km - a.km || b.minutes - a.minutes || b.sessions - a.sessions);
+      const maxKm = Math.max(...sorted.map(t => t.km), 0.1);
+
+      el.innerHTML = sorted.map((t, i) => {
+        const { bg, fg } = colorFor(t.id, state.teams);
+        const pct    = Math.round((t.km / maxKm) * 100);
+        const avgKm  = t.memberCount > 0 ? (t.km / t.memberCount).toFixed(1) : '0.0';
+        const timePart = fmtMin(t.minutes) ? ` · ${fmtMin(t.minutes)}` : '';
+        return `<div class="rank-card">
+          <div class="rank-num">${rankSymbol(i)}</div>
+          <div class="team-avatar" style="background:${bg};color:${fg};">${t.name.slice(0,4)}</div>
+          <div class="rank-info">
+            <div class="rank-name">${t.name}</div>
+            <div class="rank-meta">${t.memberCount}人 · ${t.sessions}回${timePart} · 平均 ${avgKm}km/人</div>
+            <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${fg};"></div></div>
+          </div>
+          <div class="rank-stat">
+            <div class="rank-km">${t.km.toFixed(1)}</div>
+            <div class="rank-km-label">km 合計</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ---- 履歴描画 ----
+  function renderHistory() {
+    const teamFilter   = document.getElementById('hist-team').value;
+    const memberFilter = document.getElementById('hist-member').value;
+    let logs = [...state.logs].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    if (memberFilter) {
+      logs = logs.filter(l => l.memberId === memberFilter);
+    } else if (teamFilter) {
+      const ids = state.members.filter(m => m.teamId === teamFilter).map(m => m.id);
+      logs = logs.filter(l => ids.includes(l.memberId));
+    }
+    const el = document.getElementById('history-list');
+    if (!logs.length) { el.innerHTML = '<div class="empty">記録がありません</div>'; return; }
+    el.innerHTML = logs.map(l => {
+      const m    = state.members.find(x => x.id === l.memberId);
+      const mName = m ? m.name : '不明';
+      const team  = m ? state.teams.find(t => t.id === m.teamId) : null;
+      const d     = String(l.date).slice(5).replace('-', '/');
+      const parts = [];
+      if (parseFloat(l.km))    parts.push(`${parseFloat(l.km).toFixed(1)} km`);
+      if (parseInt(l.minutes)) parts.push(fmtMin(l.minutes));
+      return `<div class="log-item">
+        <div class="log-date">${d}</div>
+        <div class="log-body">
+          <div class="log-menu">${l.menu}</div>
+          <div class="log-detail">${mName}${team ? ` (${team.name})` : ''}${parts.length ? ' · ' + parts.join(' · ') : ''}</div>
+        </div>
+        <button class="log-del" onclick="deleteLog('${l.id}')" aria-label="削除">
+          <i class="ti ti-trash"></i>
+        </button>
+      </div>`;
+    }).join('');
+  }
+
+  function onHistTeamChange() {
+    const teamId  = document.getElementById('hist-team').value;
+    const mSel    = document.getElementById('hist-member');
+    const members = teamId ? state.members.filter(m => m.teamId === teamId) : state.members;
+    mSel.innerHTML = '<option value="">全員</option>' + members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    renderHistory();
+  }
+
+  // ---- 設定描画 ----
+  function renderSettings() { renderTeamList(); renderMemberList(); populateSelects(); }
+
+  function renderTeamList() {
+    const el = document.getElementById('team-list');
+    if (!state.teams.length) {
+      el.innerHTML = '<div style="padding:8px 0;font-size:13px;color:var(--color-text2);">チームがありません</div>';
+      return;
+    }
+    el.innerHTML = '<div style="border-top:0.5px solid var(--color-border);margin-top:10px;padding-top:10px;">' +
+      state.teams.map(t => {
+        const { bg, fg } = colorFor(t.id, state.teams);
+        const cnt = state.members.filter(m => m.teamId === t.id).length;
+        return `<div class="member-row">
+          <div class="team-avatar" style="background:${bg};color:${fg};font-size:11px;">${t.name.slice(0,4)}</div>
+          <div class="member-name">${t.name} <span style="font-size:12px;color:var(--color-text2);">(${cnt}人)</span></div>
+          <button class="btn btn-danger btn-sm" onclick="deleteTeam('${t.id}')">削除</button>
+        </div>`;
+      }).join('') + '</div>';
+  }
+
+  function renderMemberList() {
+    const el = document.getElementById('member-list');
+    if (!state.members.length) { el.innerHTML = '<div class="empty">メンバーを追加してください</div>'; return; }
+    el.innerHTML = state.members.map(m => {
+      const { bg, fg } = colorFor(m.id, state.members);
+      const teamOpts = state.teams.map(t =>
+        `<option value="${t.id}" ${t.id === m.teamId ? 'selected' : ''}>${t.name}</option>`
+      ).join('');
+      return `<div class="member-row">
+        <div class="avatar" style="background:${bg};color:${fg};font-size:12px;">${m.name.slice(0,2)}</div>
+        <div class="member-name">${m.name}</div>
+        <select class="member-team-sel" onchange="changeMemberTeam('${m.id}',this.value)">
+          <option value="" ${!m.teamId ? 'selected' : ''}>未所属</option>${teamOpts}
+        </select>
+        <button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}')">削除</button>
+      </div>`;
+    }).join('');
+  }
+
+  function populateSelects() {
+    // チーム選択（メンバー追加用）
+    const tmSel = document.getElementById('new-member-team');
+    const curTm = tmSel.value;
+    tmSel.innerHTML = '<option value="">未所属</option>' + state.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    if (curTm) tmSel.value = curTm;
+    // 履歴フィルター（チーム）
+    const histTeam = document.getElementById('hist-team');
+    const curHT = histTeam.value;
+    histTeam.innerHTML = '<option value="">全チーム</option>' + state.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    if (curHT) histTeam.value = curHT;
+    // 記録メンバー選択
+    const logM = document.getElementById('log-member');
+    const curM = logM.value;
+    logM.innerHTML = state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    if (curM) logM.value = curM;
+  }
+
+  function renderAll() {
+    populateSelects();
+    renderRanking();
+    renderHistory();
+    if (document.getElementById('sec-settings').classList.contains('active')) renderSettings();
+    document.getElementById('log-date').value = new Date().toISOString().slice(0, 10);
+  }
+
+  // ---- チーム追加・削除 ----
+  async function addTeam() {
+    const name = document.getElementById('new-team').value.trim();
+    if (!name) return;
+    showLoading('追加中...');
+    try {
+      const res = await api('POST', { action: 'addTeam', name });
+      state.teams.push({ id: res.id, name });
+      document.getElementById('new-team').value = '';
+      renderSettings(); renderRanking();
+      showToast(name + ' を追加しました');
+    } catch (e) { showToast('エラーが発生しました'); } finally { hideLoading(); }
+  }
+
+  async function deleteTeam(id) {
+    showLoading('削除中...');
+    try {
+      await api('POST', { action: 'deleteTeam', id });
+      state.teams   = state.teams.filter(t => t.id !== id);
+      state.members = state.members.map(m => m.teamId === id ? { ...m, teamId: '' } : m);
+      renderSettings(); renderRanking();
+      showToast('チームを削除しました');
+    } catch (e) { showToast('エラーが発生しました'); } finally { hideLoading(); }
+  }
+
+  // ---- メンバー追加・削除 ----
+  async function addMember() {
+    const name   = document.getElementById('new-member').value.trim();
+    const teamId = document.getElementById('new-member-team').value;
+    if (!name) return;
+    showLoading('追加中...');
+    try {
+      const res = await api('POST', { action: 'addMember', name, teamId });
+      state.members.push({ id: res.id, name, teamId });
+      document.getElementById('new-member').value = '';
+      populateSelects(); renderMemberList();
+      showToast(name + ' を追加しました');
+    } catch (e) { showToast('エラーが発生しました'); } finally { hideLoading(); }
+  }
+
+  async function deleteMember(id) {
+    showLoading('削除中...');
+    try {
+      await api('POST', { action: 'deleteMember', id });
+      state.members = state.members.filter(m => m.id !== id);
+      state.logs    = state.logs.filter(l => l.memberId !== id);
+      renderSettings(); renderRanking();
+      showToast('メンバーを削除しました');
+    } catch (e) { showToast('エラーが発生しました'); } finally { hideLoading(); }
+  }
+
+  async function changeMemberTeam(memberId, teamId) {
+    try {
+      await api('POST', { action: 'updateMemberTeam', id: memberId, teamId });
+      const m = state.members.find(x => x.id === memberId);
+      if (m) m.teamId = teamId;
+      renderRanking();
+    } catch (e) { showToast('エラーが発生しました'); }
+  }
+
+  // ---- ログ追加・削除 ----
+  async function addLog() {
+    const memberId = document.getElementById('log-member').value;
+    const menu     = document.getElementById('log-menu').value.trim();
+    const km       = parseFloat(document.getElementById('log-km').value)  || 0;
+    const minutes  = parseInt(document.getElementById('log-min').value)   || 0;
+    const date     = document.getElementById('log-date').value;
+    if (!memberId) { showToast('メンバーを選んでください'); return; }
+    if (!menu)     { showToast('メニューを入力してください'); return; }
+    if (!date)     { showToast('日付を選んでください'); return; }
+    if (!km && !minutes) { showToast('距離か時間を入力してください'); return; }
+    showLoading('記録中...');
+    try {
+      const res = await api('POST', { action: 'addLog', memberId, menu, km, minutes, date });
+      state.logs.push({ id: res.id, memberId, menu, km, minutes, date });
+      document.getElementById('log-menu').value = '';
+      document.getElementById('log-km').value   = '';
+      document.getElementById('log-min').value  = '';
+      showToast('記録しました！');
+      switchTab('ranking');
+    } catch (e) { showToast('エラーが発生しました'); } finally { hideLoading(); }
+  }
+
+  async function deleteLog(id) {
+    showLoading('削除中...');
+    try {
+      await api('POST', { action: 'deleteLog', id });
+      state.logs = state.logs.filter(l => l.id !== id);
+      renderHistory(); renderRanking();
+      showToast('削除しました');
+    } catch (e) { showToast('エラーが発生しました'); } finally { hideLoading(); }
+  }
+
+  // ---- トースト ----
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ---- 起動 ----
+  loadAll();
+</script>
+</body>
+</html>
